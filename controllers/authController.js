@@ -51,6 +51,29 @@ const createUser = async (req, res) => {
     }
 }
 
+const loginUser = async (req,res) => {
+    const {email, password} = req.body;
+    try{
+        const user = await User.findOne({ email });
+        if (!user) {
+          return res.status(400).json({ success: false, message: 'Invalid credentials' });
+        }
+    
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+          return res.status(400).json({ success: false, message: 'Invalid credentials' });
+        }
+    
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        return res.status(200).json({ token,success: true, message: 'Logged in Succesfully' });
+    }catch(error){
+        console.log(error);
+        console.error(error.message);
+        return res.status(500).json({success: false, message: error});
+    }
+}
+
 export {
-    createUser
+    createUser,
+    loginUser
 }
